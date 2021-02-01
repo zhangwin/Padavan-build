@@ -17,10 +17,11 @@ on:
 #    - cron: 0 8 * * 5
   watch:
     types: [started]
+    workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
@@ -42,9 +43,15 @@ jobs:
         mkdir -p /opt/images/
     - name: Build Firmware
       env:
-        TNAME: R2100
+        TNAME: RM2100
+        MHZ: 1100
       run: |
         cd /opt/rt-n56u/trunk
+        echo "CPU超频到$MHZ"
+        echo "修改CPU频率"
+        clock=`echo "obase=16 ; ibase=10 ; (((($MHZ/20)-1)*16+2))" | bc | awk '{print tolower($0)}'`
+        sed -i "554,555s:0xff:0x7ff:g" linux-3.4.x/arch/mips/rt2880/init.c
+        sed -i "554,556s:0xc2:0x$clock:g" linux-3.4.x/arch/mips/rt2880/init.c
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
         exit 1
@@ -100,17 +107,17 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_NAPT66=n" >> configs/templates/$TNAME.config       #删除用于二级路由、教育网分发IPv6地址的NAPT66
         echo "CONFIG_FIRMWARE_INCLUDE_SRELAY=n" >> configs/templates/$TNAME.config       #删除SRELAY
         echo "CONFIG_FIRMWARE_INCLUDE_SOCAT=n" >> configs/templates/$TNAME.config        #删除工具SOCAT
-        echo "CONFIG_FIRMWARE_INCLUDE_MTR=n" >> configs/templates/$TNAME.config          #删除工具MTR
-        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=n" >> configs/templates/$TNAME.config       #删除工具IPERF3
+        echo "CONFIG_FIRMWARE_INCLUDE_MTR=y" >> configs/templates/$TNAME.config          #删除工具MTR
+        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=y" >> configs/templates/$TNAME.config       #删除工具IPERF3
         echo "CONFIG_FIRMWARE_INCLUDE_NANO=n" >> configs/templates/$TNAME.config         #删除工具NANO
         echo "CONFIG_FIRMWARE_INCLUDE_HTOP=n" >> configs/templates/$TNAME.config         #删除工具HTOP
-        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=n" >> configs/templates/$TNAME.config        #删除工具LRZSZ
-        echo "CONFIG_FIRMWARE_INCLUDE_CURL=n" >> configs/templates/$TNAME.config         #删除工具CURL
-        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSH=n" >> configs/templates/$TNAME.config      #删除OPENSSH
+        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=y" >> configs/templates/$TNAME.config        #删除工具LRZSZ
+        echo "CONFIG_FIRMWARE_INCLUDE_CURL=y" >> configs/templates/$TNAME.config         #删除工具CURL
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSH=y" >> configs/templates/$TNAME.config      #删除OPENSSH
         echo "CONFIG_FIRMWARE_INCLUDE_SFTP=n" >> configs/templates/$TNAME.config         #删除SFTP
         echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=n" >> configs/templates/$TNAME.config      #删除TCPDUMP
         echo "CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=n" >> configs/templates/$TNAME.config     #删除EAP_PEAP
-        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=n" >> configs/templates/$TNAME.config   #删除OPENSSL_EC
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y" >> configs/templates/$TNAME.config   #删除OPENSSL_EC
         #########################################################################################
         # 自定义添加其它功能请参考源码configs/templates/目录下的config文件。按照上面的格式添加即可
         # 格式如下：

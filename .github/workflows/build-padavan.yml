@@ -42,13 +42,14 @@ jobs:
         mkdir -p /opt/images/
     - name: Build Firmware
       env:
-        TNAME: RM2100
         MHZ: 1100
+        TNAME: RM2100
       run: |
         cd /opt/rt-n56u/trunk
         echo "CPU超频到$MHZ"mhz
         echo "修改CPU频率"
         clock=`echo "obase=16 ; ibase=10 ; (((($MHZ/20)-1)*16+2))" | bc`
+        echo "16进制$clock"
         sed -i "554,555s:0xff:0x7ff:g" linux-3.4.x/arch/mips/rt2880/init.c
         sed -i "554,556s:0xc2:0x$clock:g" linux-3.4.x/arch/mips/rt2880/init.c
         if [ ! -f configs/templates/$TNAME.config ] ; then

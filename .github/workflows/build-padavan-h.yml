@@ -3,7 +3,7 @@
 # 小米AC2100型号为R2100
 # 红米AC2100型号为RM2100
 #################################################################################################
-name: Build Padavan
+name: Build Padavan hanwckf
 
 on: 
   release:
@@ -17,11 +17,11 @@ on:
 #    - cron: 0 8 * * 5
   watch:
     types: [started]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
     - name: Checkout

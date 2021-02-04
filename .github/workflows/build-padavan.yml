@@ -21,7 +21,7 @@ on:
 env:                      # 环境变量
   MHZ: 1100               # CPU超频频率 必须为20的倍数
   TNAME: RM2100           # 配置文件名  https://github.com/hanwckf/rt-n56u/tree/master/trunk/configs/templates
-  BUILD_VERSION: hanwckf  # hanwckf 或者 chongshengB
+  BUILD_VERSION: chongshengB  # hanwckf 或者 chongshengB
 
 jobs:
   build:
@@ -41,7 +41,7 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       run: |
-        git clone --depth=1 https://github.com/hanwckf/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/$BUILD_VERSION/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/

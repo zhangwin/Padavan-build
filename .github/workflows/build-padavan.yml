@@ -17,11 +17,16 @@ on:
 #    - cron: 0 8 * * 5
   watch:
     types: [started]
-  workflow_dispatch:
+  #workflow_dispatch:
+env:                      # 环境变量
+  MHZ: 1100               # CPU超频频率 必须为20的倍数
+  TNAME: RM2100           # 配置文件名  https://github.com/hanwckf/rt-n56u/tree/master/trunk/configs/templates
+  BUILD_VERSION: hanwckf  # hanwckf 或者 chongshengB
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
     - name: Checkout
@@ -41,9 +46,6 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
     - name: Build Firmware
-      env:
-        MHZ: 1100
-        TNAME: RM2100
       run: |
         cd /opt/rt-n56u/trunk
         echo "CPU超频到$MHZ"mhz
@@ -123,11 +125,33 @@ jobs:
         #########################################################################################
         # 自定义添加其它功能请参考源码configs/templates/目录下的config文件。按照上面的格式添加即可
         # 格式如下：
-        # sed -i '/自定义项/d' .config
-        # echo "自定义项=y" >> .config
+        # sed -i '/自定义项/d' configs/templates/$TNAME.config
+        # echo "自定义项=y" >> configs/templates/$TNAME.config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FTPD/d' configs/templates/$TNAME.config
+        echo "CONFIG_FIRMWARE_INCLUDE_FTPD=y" >> configs/templates/$TNAME.config
+        #########################################################################################
+        # 以下插件为chongshengB 版本专属插件，hanwckf版不可用!
+        #########################################################################################
+        if [ $BUILD_VERSION == "chongshengB" ]; then
+          echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> configs/templates/$TNAME.config      #simple-obfs混淆插件
+          echo "CONFIG_FIRMWARE_INCLUDE_ADBYBY=y" >> configs/templates/$TNAME.config      #adbyby plus+
+          echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y" >> configs/templates/$TNAME.config     #阿里DDNS
+          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> configs/templates/$TNAME.config    #smartdns
+          echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNSBIN=y" >> configs/templates/$TNAME.config #smartdns二进制文件
+          echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> configs/templates/$TNAME.config       #集成v2ray执行文件（3.8M左右)，如果不集成，会从网上下载下来执行，不影响正常使用
+          echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=n" >> configs/templates/$TNAME.config      #集成trojan执行文件(1.1M左右)，如果不集成，会从网上下载下来执行，不影响正常使用
+          echo "CONFIG_FIRMWARE_INCLUDE_KOOLPROXY=y" >> configs/templates/$TNAME.config   #KP广告过滤
+          echo "CONFIG_FIRMWARE_INCLUDE_CADDY=y" >> configs/templates/$TNAME.config       #在线文件管理服务
+          echo "CONFIG_FIRMWARE_INCLUDE_CADDYBIN=n" >> configs/templates/$TNAME.config    #集成caddu执行文件，此文件有13M,请注意固件大小。如果不集成，会从网上下载下来执行，不影响正常使用
+          echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> configs/templates/$TNAME.config #集成AdGuardHome
+          echo "CONFIG_FIRMWARE_INCLUDE_WYY=y" >> configs/templates/$TNAME.config         #网易云解锁
+          echo "CONFIG_FIRMWARE_INCLUDE_WYYBIN=n" >> configs/templates/$TNAME.config      #网易云解锁GO版本执行文件（4M多）注意固件超大小,不集成会自动下载
+          echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=n" >> configs/templates/$TNAME.config    #zerotier ~1.3M
+        fi
         #########################################################################################
         sudo ./clear_tree
-        sudo fakeroot ./build_firmware_modify $TNAME
+        cp -f configs/templates/$TNAME.config .config
+        sudo fakeroot ./build_firmware_modify $TNAME 0
         #sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages

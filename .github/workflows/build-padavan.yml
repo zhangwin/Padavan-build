@@ -3,7 +3,7 @@
 # 小米AC2100型号为R2100
 # 红米AC2100型号为RM2100
 #################################################################################################
-name: Build Padavan hanwckf
+name: Build Padavan
 
 on: 
   release:
@@ -21,7 +21,7 @@ on:
 env:                      # 环境变量
   MHZ: 1100               # CPU超频频率 必须为20的倍数
   TNAME: RM2100           # 配置文件名  https://github.com/hanwckf/rt-n56u/tree/master/trunk/configs/templates
-  BUILD_VERSION: chongshengB  # hanwckf 或者 chongshengB
+  BUILD_VERSION: hanwckf  # hanwckf 或者 chongshengB
 
 jobs:
   build:
@@ -121,16 +121,18 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=n" >> configs/templates/$TNAME.config      #删除TCPDUMP
         echo "CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=n" >> configs/templates/$TNAME.config     #删除EAP_PEAP
         echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y" >> configs/templates/$TNAME.config   #删除OPENSSL_EC
-        echo "CONFIG_FIRMWARE_CPU_900MHZ=y" >> configs/templates/$TNAME.config           #添加超频设置
+        echo "CONFIG_FIRMWARE_CPU_900MHZ=y" >> configs/templates/$TNAME.config           #开启超频，仅MT7621可用
         #########################################################################################
         # 自定义添加其它功能请参考源码configs/templates/目录下的config文件。按照上面的格式添加即可
         # 格式如下：
         # sed -i '/自定义项/d' configs/templates/$TNAME.config
         # echo "自定义项=y" >> configs/templates/$TNAME.config
+        
         sed -i '/CONFIG_FIRMWARE_INCLUDE_FTPD/d' configs/templates/$TNAME.config
-        echo "CONFIG_FIRMWARE_INCLUDE_FTPD=y" >> configs/templates/$TNAME.config
+        echo "CONFIG_FIRMWARE_INCLUDE_FTPD=n" >> configs/templates/$TNAME.config
+        
         #########################################################################################
-        # 以下插件为chongshengB 版本专属插件，hanwckf版不可用!
+        # 以下插件为chongshengB 版本专属插件，hanwckf版不可用!!!
         #########################################################################################
         if [ $BUILD_VERSION == "chongshengB" ]; then
           echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> configs/templates/$TNAME.config      #simple-obfs混淆插件
@@ -140,7 +142,7 @@ jobs:
           echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNSBIN=y" >> configs/templates/$TNAME.config #smartdns二进制文件
           echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> configs/templates/$TNAME.config       #集成v2ray执行文件（3.8M左右)，如果不集成，会从网上下载下来执行，不影响正常使用
           echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=n" >> configs/templates/$TNAME.config      #集成trojan执行文件(1.1M左右)，如果不集成，会从网上下载下来执行，不影响正常使用
-          echo "CONFIG_FIRMWARE_INCLUDE_KOOLPROXY=y" >> configs/templates/$TNAME.config   #KP广告过滤
+          echo "CONFIG_FIRMWARE_INCLUDE_KOOLPROXY=n" >> configs/templates/$TNAME.config   #KP广告过滤
           echo "CONFIG_FIRMWARE_INCLUDE_CADDY=y" >> configs/templates/$TNAME.config       #在线文件管理服务
           echo "CONFIG_FIRMWARE_INCLUDE_CADDYBIN=n" >> configs/templates/$TNAME.config    #集成caddu执行文件，此文件有13M,请注意固件大小。如果不集成，会从网上下载下来执行，不影响正常使用
           echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> configs/templates/$TNAME.config #集成AdGuardHome
@@ -154,6 +156,7 @@ jobs:
         sudo fakeroot ./build_firmware_modify $TNAME 0
         #sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
+        #cp .config /opt/images/test.config
     - name : Upload packages
       uses: actions/upload-artifact@master
       if: always()

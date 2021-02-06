@@ -158,6 +158,10 @@ jobs:
           echo "CONFIG_FIRMWARE_INCLUDE_WYY=y" >> configs/templates/$TNAME.config         #网易云解锁
           echo "CONFIG_FIRMWARE_INCLUDE_WYYBIN=n" >> configs/templates/$TNAME.config      #网易云解锁GO版本执行文件（4M多）注意固件超大小,不集成会自动下载
           echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=n" >> configs/templates/$TNAME.config    #zerotier ~1.3M
+          # 更新v2ray版本
+          v2_version=`curl --silent "https://api.github.com/repos/v2fly/v2ray-core/releases/latest" | jq -r '.tag_name | sub("^v";"")'`
+          sed -i "s/V2ray_VERSION := .*/V2ray_VERSION := $v2_version/g" /opt/rt-n56u/trunk/user/v2ray/Makefile
+          sed -i 's|codeload.github.com/v2ray|codeload.github.com/v2fly|g' /opt/rt-n56u/trunk/user/v2ray/Makefile
         fi
         #########################################################################################
         sudo ./clear_tree

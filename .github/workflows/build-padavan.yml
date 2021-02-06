@@ -45,6 +45,13 @@ jobs:
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
+    - id: vars
+      run: |
+        echo ::set-output name=go_version::$(curl -s https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json | grep -oE '"version": "[0-9]{1}.[0-9]{1,}(.[0-9]{1,})?"' | head -1 | cut -d':' -f2 | sed 's/ //g; s/"//g')
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.vars.outputs.go_version }}
     - name: Build Firmware
       run: |
         cd /opt/rt-n56u/trunk
